@@ -4,12 +4,12 @@
 *.o
 *.obj
 a.out
-
+*.bin
 # 보고서 파일 (업로드 제외)
 *.pdf
 *.doc
 *.docx
-
+*.odt#
 # Python 캐시
 __pycache__/
 *.pyc
@@ -19,3 +19,4 @@ __pycache__/
 .DS_Store
 *.swp
 *~
+.gdb_history
