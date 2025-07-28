@@ -1,0 +1,21 @@
+# C/C++ 컴파일 결과물
+*.exe
+*.out
+*.o
+*.obj
+a.out
+
+# 보고서 파일 (업로드 제외)
+*.pdf
+*.doc
+*.docx
+
+# Python 캐시
+__pycache__/
+*.pyc
+
+# 기타
+.vscode/
+.DS_Store
+*.swp
+*~
