@@ -1,0 +1,29 @@
+# 인터넷 서비스와 정보보호 CTF - [rock-scissor-paper] 풀이 
+
+## 1. 개요
+본 문제는 2025년 1학기 보안 수업 CTF에 출제된 문제로, 스택 버퍼 오버플로우 (CWE-121 Stack-based Buffer Overflow)을 다룸.
+
+## 2. 취약점 분석
+- NX, FULL RELRO : shellcode injection, GOT overwrite불가
+- 탈출을 시도하는 메뉴(6번 메뉴) 등에서 사용자 입력을 받을 때, 지정된 버퍼의 크기를 초과하여 입력을 허용하는 취약점
+
+## 3. 풀이 과정 (Exploit)
+1. 인증 코드 및 주소 확보 (Information Leak & Analysis)
+
+    바이너리 분석을 통해 입력한 코드가 검증되는 전역 변수 영역인 Switch1의 주소(0x409000)와 Switch2의 주소(0x40a000)를 확보.
+    1번과 2번 메뉴를 각각 호출하여 프로그램 실행 시마다 매번 무작위로 생성되는 내부 스위치 활성화 인증 코드인 button1_code와 button2_code 값을 런타임에서 동적으로 읽어와 확보.
+
+2. Stack Buffer Oerflow를 통한 ROP 체인 구성
+    방탈출 실행 메뉴(6번 메뉴)에서 입력 값 검증 미흡으로 인해 발생하는 Stack Buffer Overflow 취약점을 활용하여 스택의 RET(Return Address) 영역에 
+64비트 함수 호출 규약(Calling Convention)에 맞춰 가젯(pop rdi; ret, pop rsi; pop r15; ret)을 활용해 다음과 같은 ROP(Return-Oriented Programming) 체인 구성:
+        read(0, 0x409000, ...)를 호출하여 표준 입력(stdin)으로부터 Switch1 주소에 데이터를 쓸 수 있도록 준비.
+        이어서 RSI 레지스터만 갱신하여 read(0, 0x40a000, ...)를 호출, Switch2 주소 역시 동일하게 준비.
+        인증 성공 시 최종적으로 플래그를 열고 출력하는 내부 함수인 button1(0x401450)과 button2(0x4014c8)를 연속으로 호출.
+
+3. 익스플로잇 자동화 수행 (escape.py)
+    pwntools 스크립트를 통해 스택을 덮어쓸 ROP 페이로드를 먼저 전송.
+    ROP 체인에 의해 read 함수가 실행되어 입력을 대기하는 타이밍에 맞춰, 사전에 확보해 두었던 정답 인증 코드(button1_code, button2_code)를 차례대로 전송.
+    이를 통해 두 스위치 조건이 모두 ON 상태로 강제 변환되면서 우회 로직을 통과하였고, 방탈출 성공과 함께 최종 Flag를 획득.
+
+## 4. 결과
+exploit 성공, flag 획득
